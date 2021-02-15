@@ -1,55 +1,53 @@
 library(tidyverse)
 library(broom)
-library(usethis)
+library(parallel)
 
 source("functions.R")
 
-param_grid_homo <- expand.grid(
-  k = 5:8,
-  n = c(1000, 900, 800),
-  max_effect = seq(0.5, 2.5, by = 0.05)
-) %>%
-  as_tibble()
 
-t <- Sys.time()
-homocysteine_sims <- mcmapply(
-  function(.x, .y) simModels(
-                     n = 1000, k = .x, 14, 6, max.effect = .y, n.sims = 1000),
-  param_grid$k,
-  param_grid$max_effect,
-  mc.cores = 6,
-  SIMPLIFY = FALSE
+sims_homocysteine <- simPvalues(
+  n.sims = 1000,
+  y_mean = 14,
+  y_sd = 6.1,
+  par_max_effect = seq(0.5, 2.5, by = 0.05),
+  par_n = c(800, 900, 1000),
+  par_k = 5:8,
+  cores = 6
 )
-Sys.time() - t
+saveRDS(sims_homocysteine, "sims_homocysteine.rds")
 
-param_grid <- expand.grid(
-  k = 5:8,
-  max_effect = seq(0.5, 2.5, by = 0.05)
-) %>%
-  as_tibble()
-
-t <- Sys.time()
-homocysteine_sims <- map2(
-  param_grid$k,
-  param_grid$max_effect,
-  ~ simModels(1000, .x, 14, 6, max.effect = .y, n.sims = 1000)
+sims_apob <- simPvalues(
+  n.sims = 1000,
+  y_mean = 110,
+  y_sd = 31.5,
+  par_max_effect = seq(2, 5, by = 0.05),
+  par_n = c(800, 900, 1000),
+  par_k = 5:8,
+  cores = 6
 )
-Sys.time() - t
+saveRDS(sims_apob, "sims_apob.rds")
 
-## saveRDS(sims, "sims.rds")
+sims_hs <- simPvalues(
+  n.sims = 1000,
+  y_mean = 3.25,
+  y_sd = 5.25,
+  par_max_effect = seq(0, 2, by = 0.05),
+  par_n = c(800, 900, 1000),
+  par_k = 5:8,
+  cores = 6
+)
+saveRDS(sims_hs, "sims_hs.rds")
 
-readRDS("sims.rds")
 
-sims <- homocysteine_sims
+## readRDS("sims.rds")
+
+sims <- sims_apob
 coefs <- map_df(sims, ~ .$coef)
 p_values <- map_df(sims, ~ .$p_values)
 
-coefs %>%
-  filter(term != "(Intercept)") %>%
-  group_by(sim)
 
 power_df <- p_values %>%
-  group_by(k, max_effect) %>%
+  group_by(n, max_effect, ) %>%
   summarize(
     power = sum(p.value < 0.05) / n(),
     power_cat = case_when(
@@ -61,7 +59,7 @@ power_df <- p_values %>%
   )
 
 power_df %>%
-  ggplot(aes(max_effect, power, group = k)) +
+  ggplot(aes(max_effect, power, group = n, color = n)) +
   geom_line(alpha = 0.7) +
   geom_hline(yintercept = 0.8, linetype = "dashed", color = "grey37") +
   scale_y_continuous(breaks = seq(0, 1, by = 0.2)) +
@@ -78,30 +76,3 @@ power_df %>%
     y = "Power"
   )
 
-df %>%
-  ggplot(aes(k, max_effect, fill = power_cat)) +
-  geom_tile() +
-  scale_fill_viridis_c()
-
-sims <- simModels(
-  n = 1000,
-  k = 4,
-  y.mean = 14,
-  y.sd = 6,
-  max.effect = 1,
-  n.sims = 1000
-)
-
-m$model
-max_effects
-summary(m)
-glance(m)
-
-signif_pars <- sims %>%
-  filter(term != "(Intercept)") %>%
-  group_by(sim) %>%
-  summarize(signif_params = sum(p.value < 0.05))
-
-sum(signif_pars$signif_params > 0) / nrow(signif_pars)
-
-bind_rows(sims, .id = "sim")
