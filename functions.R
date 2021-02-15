@@ -1,7 +1,5 @@
 simExpotypeData <- function(n, k, y.mean, y.sd, max.effect) {
-
   id <- 1:n
-
   expotypes <- LETTERS[1:k] %>%
     setNames(LETTERS[1:k])
   expotype <- sample(expotypes, size = n, replace = TRUE)
@@ -60,3 +58,67 @@ simModels <- function(n, k, y.mean, y.sd, max.effect, n.sims) {
     coef = bind_rows(smod, .id = "sim")
   )
 }
+
+
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title Fit models to simulated datasets and obtain p-values
+##' @param n.sims Integer scalar with the number of simulations for each parameter combination.
+##' @param y_mean Double scalar with the mean of the outcome variable.
+##' @param y_sd Double scalar with the standard deviations of the outcome variable.
+##' @param par_max_effect Double vector with maximum differences in outcome
+##'   across two expotype groups. Used to form the parameter grid.
+##' @param par_n Double vector with number of observations per simulated dataset.
+##'   Used to form the parameter grid.
+##' @param par_k Double vector with number of expotype categories.
+##' @param cores Integer scalar with the number of cores to be used.
+##' @return A list with p-values of F-statistics and parameter estimates.
+##' @author Sergio
+simPvalues <- function(n.sims, y_mean, y_sd,
+                      par_max_effect, par_n = c(1000, 900, 800), par_k = 5:8,
+                      cores = 4) {
+
+  ## browser()
+  param_grid <- expand.grid(n = par_n, k = par_k, max_effect = par_max_effect) %>%
+    as_tibble()
+
+  sims <- mcmapply(
+    function(.x, .y, .z) {
+      simModels(
+        n = .x,
+        k = .y,
+        y.mean = y_mean,
+        y.sd = y_sd,
+        max.effect = .z,
+        n.sims = n.sims
+      )
+    },
+    param_grid$n,
+    param_grid$k,
+    param_grid$max_effect,
+    mc.cores = 6,
+    SIMPLIFY = FALSE
+  )
+
+  sims
+}
+
+
+calcPower <- function(pvalues) {
+
+  p_values <- map_df(pvalues, ~ .$p_values)
+  p_values %>%
+    group_by(n, max_effect) %>%
+    summarize(
+      power = sum(p.value < 0.05) / n(),
+      power_cat = case_when(
+        power < 0.5 ~ 1,
+        power >= 0.5 & power < 0.7 ~ 2,
+        power >= 0.7 & power < 0.8 ~ 3,
+        power > 0.8 ~ 4
+      )
+    )
+
+}
+
