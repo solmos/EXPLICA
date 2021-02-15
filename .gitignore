@@ -1,0 +1,23 @@
+*.rds
+## Possibly sensitive data
+data/
+
+## Drake folder
+.drake
+
+## Intereactively generated plots
+Rplot*
+
+## Excluded file types
+*.html
+*.pdf
+*.doc
+*.docx
+
+## Possibly confidential documents
+docs/
+
+## renv folder
+renv/
+
+env/
