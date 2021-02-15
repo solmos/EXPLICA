@@ -122,3 +122,24 @@ calcPower <- function(pvalues) {
 
 }
 
+plotPower <- function(power) {
+
+  power %>%
+    ggplot(aes(max_effect, power, group = n, color = n)) +
+    geom_line(alpha = 0.7) +
+    geom_hline(yintercept = 0.8, linetype = "dashed", color = "grey37") +
+    scale_y_continuous(breaks = seq(0, 1, by = 0.2)) +
+    scale_color_continuous(name = "Number of expotype categories") +
+    theme_bw() +
+    theme(
+      axis.text = element_text(size = 11),
+      axis.title = element_text(size = 11),
+      legend.position = "bottom"
+    ) +
+    labs(
+      title = "Power for different number of expotype categories",
+      x = "Maximum difference",
+      y = "Power"
+    )
+
+}
