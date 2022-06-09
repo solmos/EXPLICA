@@ -41,3 +41,9 @@ $$H_0: \mu = \beta_0$$
 which is given by the F-test in R's `lm()` function.
 
 The proportion of rejected null hypotheses for each sample size and maximum true difference is reported for each of the three biomarkers.
+
+## Code
+
+* [`functions.R`](functions.R) contains the necessary functions to perform the simulation and calculate and plot power.
+
+* [`power-calc.R`](power-calc.R) contains the pipeline for running the simulation and power calculations.
