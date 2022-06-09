@@ -97,7 +97,7 @@ simPvalues <- function(n.sims, y_mean, y_sd,
     param_grid$n,
     param_grid$k,
     param_grid$max_effect,
-    mc.cores = 6,
+    mc.cores = cores,
     SIMPLIFY = FALSE
   )
 
