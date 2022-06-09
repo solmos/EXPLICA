@@ -12,7 +12,7 @@ sims_homocysteine <- simPvalues(
   par_max_effect = seq(0.5, 2.5, by = 0.05),
   par_n = c(800, 900, 1000),
   par_k = 5:8,
-  cores = 6
+  cores = 18
 )
 saveRDS(sims_homocysteine, "sims_homocysteine.rds")
 
@@ -23,7 +23,7 @@ sims_apob <- simPvalues(
   par_max_effect = seq(2, 10, by = 0.05),
   par_n = c(800, 900, 1000),
   par_k = 5:8,
-  cores = 6
+  cores = 18
 )
 saveRDS(sims_apob, "sims_apob.rds")
 
@@ -34,12 +34,12 @@ sims_hs <- simPvalues(
   par_max_effect = seq(0, 2, by = 0.05),
   par_n = c(800, 900, 1000),
   par_k = 5:8,
-  cores = 6
+  cores = 18
 )
 saveRDS(sims_hs, "sims_hs.rds")
 
-calcPower(sims_hs) %>%
-  plotPower()
+## calcPower(sims_hs) %>%
+##  plotPower()
 
 ## readRDS("sims.rds")
 
